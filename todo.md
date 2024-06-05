@@ -1,0 +1,8 @@
+- [ ] learn how to develop a sender script with python
+- [ ] learn how to make a reciever with python. 
+- [ ] build the above scripts and make sure they are sending data locally...!
+- [ ] Learn how ICE Works. and setup a ice example
+- [ ] Now we need something called as SDP, and send that can be as a json object
+- [ ] Socket server to share these json objects and setup a pair successfully.
+- [ ] Called this server signaling server, verify data sharing. 
+- [ ] Work on GCP version. 
