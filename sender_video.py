@@ -20,7 +20,7 @@ async def run_offer(pc):
 
 async def main():
     pc = RTCPeerConnection()
-    pc.addIceServer({"urls": "stun:stun.l.google.com:19302"})
+    pc.addIceServer({"urls": "stun:stun.4.google.com:19302"})
 
     player = MediaPlayer('/dev/video0')  # Use the correct device for your webcam
     pc.addTrack(VideoTransformTrack(player.video))
