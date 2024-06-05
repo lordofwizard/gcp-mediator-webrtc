@@ -3,7 +3,7 @@ const WebSocket = require('ws');
 const NodeWebcam = require('node-webcam');
 const fs = require('fs');
 
-const signalingServerUrl = 'ws://localhost:8080';
+const signalingServerUrl = 'ws://192.168.0.239:6969';
 const captureInterval = 100; // Capture interval in milliseconds
 
 let pc = new wrtc.RTCPeerConnection();
