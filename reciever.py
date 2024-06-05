@@ -4,10 +4,10 @@ import websockets
 from aiortc import RTCPeerConnection, RTCSessionDescription
 
 # STUN server configuration
-stun_server = "59.11.25.32:6969"
+stun_server = "59.11.25.32:7447"
 
 async def receiver(websocket, path):
-    pc = RTCPeerConnection({"iceServers": [{"urls": f"stun:{stun_server}"}]})
+    pc = RTCPeerConnection({"iceServers": [{"urls": ['stun:stun.l.google.com:19302']}]})
 
     async def on_track(track):
         if track.kind == "video":
