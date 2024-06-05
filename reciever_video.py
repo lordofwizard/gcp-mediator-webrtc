@@ -1,7 +1,6 @@
-import cv2
 import asyncio
-from aiortc import RTCPeerConnection, RTCSessionDescription
-from aiortc.contrib.media import MediaBlackhole, MediaPlayer
+from aiortc import RTCPeerConnection, RTCSessionDescription, VideoStreamTrack
+from aiortc.contrib.media import MediaPlayer
 
 class VideoTransformTrack(VideoStreamTrack):
     def __init__(self, track):
@@ -10,41 +9,33 @@ class VideoTransformTrack(VideoStreamTrack):
 
     async def recv(self):
         frame = await self.track.recv()
-        img = frame.to_ndarray(format="bgr24")
-        cv2.imshow("Receiver", img)
-        if cv2.waitKey(1) & 0xFF == ord('q'):
-            exit()
         return frame
 
-async def run_answer(pc, offer):
-    await pc.setRemoteDescription(offer)
-    answer = await pc.createAnswer()
-    await pc.setLocalDescription(answer)
-    print("Answer SDP:")
-    print(answer.sdp)
-    return answer
+async def run_offer(pc):
+    offer = await pc.createOffer()
+    await pc.setLocalDescription(offer)
+    print("Offer SDP:")
+    print(offer.sdp)
+    return offer
 
 async def main():
-    pc = RTCPeerConnection()
-    pc.addIceServer({"urls": "stun:stun.l.google.com:19302"})
+    pc = RTCPeerConnection(configuration={"iceServers": [{"urls": "stun:stun.l.google.com:19302"}]})
+    player = MediaPlayer('/dev/video0')  # Use the correct device for your webcam
+    pc.addTrack(VideoTransformTrack(player.video))
 
-    @pc.on("track")
-    def on_track(track):
-        if track.kind == "video":
-            pc.addTrack(VideoTransformTrack(track))
+    offer = await run_offer(pc)
+    with open('offer.sdp', 'w') as f:
+        f.write(offer.sdp)
 
-    with open('offer.sdp', 'r') as f:
-        offer_sdp = f.read()
+    print("Offer written to offer.sdp")
+    input("Press Enter after receiver sets remote description...")
 
-    offer = RTCSessionDescription(sdp=offer_sdp, type='offer')
-    answer = await run_answer(pc, offer)
-    answer_sdp = answer.sdp
+    with open('answer.sdp', 'r') as f:
+        answer_sdp = f.read()
 
-    with open('answer.sdp', 'w') as f:
-        f.write(answer_sdp)
-
-    print("Answer written to answer.sdp")
-    input("Press Enter to exit...")
+    answer = RTCSessionDescription(sdp=answer_sdp, type='answer')
+    await pc.setRemoteDescription(answer)
+    print("Remote description set")
 
 if __name__ == "__main__":
     asyncio.run(main())

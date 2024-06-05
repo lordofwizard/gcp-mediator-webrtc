@@ -1,6 +1,5 @@
-import cv2
 import asyncio
-from aiortc import VideoStreamTrack, RTCPeerConnection, RTCSessionDescription
+from aiortc import RTCPeerConnection, RTCSessionDescription, VideoStreamTrack
 from aiortc.contrib.media import MediaPlayer
 
 class VideoTransformTrack(VideoStreamTrack):
@@ -10,9 +9,7 @@ class VideoTransformTrack(VideoStreamTrack):
 
     async def recv(self):
         frame = await self.track.recv()
-        img = frame.to_ndarray(format="bgr24")
-        new_frame = frame.from_ndarray(img, format="bgr24")
-        return new_frame
+        return frame
 
 async def run_offer(pc):
     offer = await pc.createOffer()
@@ -24,14 +21,13 @@ async def run_offer(pc):
 async def main():
     pc = RTCPeerConnection()
     pc.addIceServer({"urls": "stun:stun.l.google.com:19302"})
-    player = MediaPlayer('/dev/video0')
+
+    player = MediaPlayer('/dev/video0')  # Use the correct device for your webcam
     pc.addTrack(VideoTransformTrack(player.video))
 
     offer = await run_offer(pc)
-    offer_sdp = offer.sdp
-
     with open('offer.sdp', 'w') as f:
-        f.write(offer_sdp)
+        f.write(offer.sdp)
 
     print("Offer written to offer.sdp")
     input("Press Enter after receiver sets remote description...")
@@ -45,4 +41,5 @@ async def main():
 
 if __name__ == "__main__":
     asyncio.run(main())
+
 
