@@ -1,21 +1,33 @@
 # signaling_server.py
-import asyncio
-import websockets
+import socketio
 
-connected = set()
+sio = socketio.Server()
+app = socketio.WSGIApp(sio)
 
-async def handler(websocket, path):
-    connected.add(websocket)
-    try:
-        async for message in websocket:
-            for conn in connected:
-                if conn != websocket:
-                    await conn.send(message)
-    finally:
-        connected.remove(websocket)
+connections = {}
 
-start_server = websockets.serve(handler, "localhost", 6969)
+@sio.event
+def connect(sid, environ):
+    print('Client connected:', sid)
+    connections[sid] = sio
 
-asyncio.get_event_loop().run_until_complete(start_server)
-asyncio.get_event_loop().run_forever()
+@sio.event
+def disconnect(sid):
+    print('Client disconnected:', sid)
+    connections.pop(sid, None)
+
+@sio.event
+def message(sid, data):
+    print('Message from', sid, ':', data)
+    for conn_sid in connections:
+        if conn_sid != sid:
+            sio.emit('message', data, room=conn_sid)
+
+if __name__ == '__main__':
+    import eventlet
+    import eventlet.wsgi
+    import os
+
+    port = int(os.getenv('PORT', 8765))
+    eventlet.wsgi.server(eventlet.listen(('localhost', port)), app)
 
